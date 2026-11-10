@@ -447,25 +447,6 @@ class ActionHandler {
             }
         }
 
-        // A drag on an anti-bot slider is an attempt to solve it: refused.
-        if ["swipe", "drag", "scroll"].contains(method), let c = lastChallenge, nowMonotonic - c.at < 120,
-           c.bid == resolveForegroundBundleId() {
-            // A path is refused if any waypoint is on the check, not just its
-            // start: it may press beside the slider and sweep across it.
-            let waypoints = ContinuousDragPath.waypoints(cmd.dragPathParams)
-            let start = waypoints.first
-                ?? cmd.fromX.flatMap { x in cmd.fromY.map { CGPoint(x: x, y: $0) } }
-                ?? cmd.x.flatMap { x in cmd.y.map { CGPoint(x: x, y: $0) } }
-                ?? CGPoint(x: pointSize.width / 2, y: pointSize.height / 2)
-            if c.area.contains(start) || waypoints.contains(where: c.area.contains) {
-                iCTRLUITests.logBuffer.append("🛑 \(method) refused: it touches an anti-bot check")
-                return (nil, JSONRPCError(code: -32602, message:
-                    "Not done: this \(method) touches the anti-bot check read moments ago (slider / puzzle). iCTRL " +
-                    "doesn't solve verification. Close it (its 关闭 / ×), back out, or stop and report the step as blocked " +
-                    "by verification.", data: nil))
-            }
-        }
-
         // Settle check: a frame before the action, then watch until the
         // screen stops reacting, so the caller can read right away instead of
         // sleeping a guessed delay. On by default — callers that most need it
@@ -4917,8 +4898,7 @@ class ActionHandler {
                 "element_type": .string("captcha"), "label": .string("anti-bot check"),
                 "x": .double(area.minX), "y": .double(area.minY), "width": .double(area.width), "height": .double(area.height),
                 "covering_layer": .bool(true), "covered": .object(json(u)),
-                "note": .string("An anti-bot check covers this point, so the tap landed on it, not on '\(u.label)'. " +
-                                "iCTRL doesn't solve verification: close it or back out."),
+                "note": .string("An anti-bot check covers this point, so the tap landed on it, not on '\(u.label)'."),
             ]
         }
         guard let top = stack?.top else { return under.map(json) }
@@ -5110,9 +5090,7 @@ class ActionHandler {
         return (kind, area, Array(ways.prefix(3)), promo)
     }
 
-    /// The last anti-bot check seen, per app — to refuse drags on it and to
-    /// count how often this app is pushing back.
-    private var lastChallenge: (bid: String, area: CGRect, at: TimeInterval)?
+    /// Recent blocker observations per app, for read-response advice only.
     private var blockedSeen: [String: [TimeInterval]] = [:]
 
     /// Adds blocked_by / close_candidates / promo_popup and their advice to
@@ -5125,16 +5103,15 @@ class ActionHandler {
             let recent = (blockedSeen[bid] ?? []).filter { nowMonotonic - $0 < 600 } + [nowMonotonic]
             blockedSeen[bid] = recent
             if kind == "captcha" {
-                if let a = b.area { lastChallenge = (bid, a.insetBy(dx: -60, dy: -120), nowMonotonic) }
-                advice.append("An anti-bot check (slider / puzzle / \"are you a robot\") is on screen. iCTRL will not " +
-                    "solve it and refuses drags on it: don't try. Close it if it offers a way out (below), otherwise back " +
-                    "out (返回, or relaunch the app), then slow down — or stop and report the step as blocked by verification.")
+                advice.append("An anti-bot check (slider / puzzle / \"are you a robot\") is on screen. " +
+                    "This is screen information; touch actions use the normal validation and execution path. " +
+                    "Read the screen after an action to check its result.")
             } else {
                 advice.append("This app is throttling: a \"too busy / rest a while / too many requests\" page. Don't retry " +
                     "or tap around — wait at least a minute, then try once (刷新 / 重试 / back). If it comes back, stop using " +
                     "this app for now and report it.")
             }
-            if recent.count >= 3 {
+            if recent.count >= 3, kind == "rate_limit" {
                 advice.append("This app has pushed back \(recent.count) times in 10 minutes: stop using it for now — more " +
                     "attempts only escalate its checks.")
             }

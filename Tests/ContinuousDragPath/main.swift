@@ -73,10 +73,10 @@ for duration in [0.1, 10.0] {
     check(zip(samples, samples.dropFirst()).allSatisfy { $0.offset < $1.offset }, "Repeated waypoint offsets invalid")
 }
 
-// Waypoints for the alert and anti-bot checks: every well-formed point, in order.
+// Waypoints for alert routing: every well-formed point, in order.
 let mixed: [String: JSONValue] = ["points": .array([point(50, 200), .null, point(.nan, 1), point(300, 600)])]
 check(ContinuousDragPath.waypoints(mixed) == [CGPoint(x: 50, y: 200), CGPoint(x: 300, y: 600)],
-      "Anti-bot check would miss a later waypoint")
+      "Alert routing would miss a later waypoint")
 check(ContinuousDragPath.waypoints(["points": .array([point(.nan, 1)])]).isEmpty, "Nonfinite waypoint accepted")
 check(ContinuousDragPath.waypoints(nil).isEmpty, "Endpoint drag reported waypoints")
 

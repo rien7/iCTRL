@@ -24,7 +24,6 @@ wired() {
 wired iCTRLUITests/iCTRLUITests.swift 'if method == "drag" { return ContinuousDragPath.rpcBudget(params'
 wired iCTRLUITests/ActionHandler.swift 'ContinuousDragPath.parse(params) { point, index in'
 wired iCTRLUITests/ActionHandler.swift 'validateCoordinate(x: Double(point.x), y: Double(point.y), context: "drag point'
-wired iCTRLUITests/ActionHandler.swift 'waypoints.contains(where: c.area.contains)'
 wired iCTRLUITests/ActionHandler.swift '!ContinuousDragPath.waypoints(cmd.dragPathParams).isEmpty'
 wired iCTRLKit/RPCMethod.swift '"drag_path",'
 echo "ContinuousDragPath: call sites wired"

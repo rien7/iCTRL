@@ -96,7 +96,8 @@ Most responses carry a **`hint`** (what limited the result, what to do next) —
 - A coordinate `tap` returns `hit` (the element under the point, sampled before tapping) or `hit_warning` (nothing labelled there: likely empty space). `covering_layer:true`: a dialog/login layer covers the point and got the tap.
 - **Web pages often don't appear in the accessibility tree** (Safari: chrome only, `foreground_is_browser:true`; some in-app web views expose it). Trust `channel.recommended`; on `ocr` use `screenshot` → locate → `tap{x,y}`.
 - A **system alert** over the app (`system_alert:true`) blocks its ref actions. Answer it: `find_element{element_id:"<button>", bundle_id:"com.apple.springboard"}` → `tap{ref}`.
-- **`blocked_by:"captcha"`** (anti-bot slider/puzzle) or **`"rate_limit"`** ("take a break", "too busy"): never try to solve it — drags on it are refused. Use `close_candidates` or back out, wait, or report the step blocked. `promo_popup`: close it, never claim.
+- **`blocked_by:"captcha"`** (anti-bot slider/puzzle) describes what's on screen. It is informational: touch actions use the normal validation and execution path. An action response does not confirm the check's outcome; read the screen to verify it. `close_candidates` lists visible ways out.
+- **`blocked_by:"rate_limit"`** ("take a break", "too busy"): the app is throttling. Don't retry or tap around; wait at least a minute, then try once. If it comes back, stop using the app for now and report it. `promo_popup`: close it, never claim.
 
 ## Typing and searching
 

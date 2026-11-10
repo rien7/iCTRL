@@ -54,7 +54,7 @@ struct ContinuousDragPath {
     }
 
     /// Every well-formed waypoint, for checks that run before parse() (system
-    /// alert routing, the anti-bot guard). Malformed entries are skipped here;
+    /// alert routing). Malformed entries are skipped here;
     /// parse() rejects the request before any touch is injected.
     static func waypoints(_ params: [String: JSONValue]?) -> [CGPoint] {
         guard case .array(let values)? = params?["points"] else { return [] }

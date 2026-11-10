@@ -575,6 +575,16 @@ All methods are JSON-RPC 2.0 (`POST /rpc`). Highlights:
 | **Device** | `device_info`, `home`, `lock`, `unlock`, `is_locked`, `wait` |
 | **Server** | `config` (remote access, `nearby_discovery`, `device_name`, sessions and revocation, `stop_server`), `reset`, `stream_ticket` |
 
+### Screen obstacles
+
+Read responses can report `blocked_by:"captcha"` for a visible anti-bot check,
+or `blocked_by:"rate_limit"` for app throttling, with `close_candidates` when
+ways out are visible. CAPTCHA detection is screen information: touch actions
+use the normal validation and execution path. A successful action response
+does not establish the check's outcome; read the screen to verify it.
+Rate-limit hints still advise waiting at least a minute, trying once, and
+stopping if the app continues throttling.
+
 ### Continuous single-finger paths
 
 `drag` accepts an optional `points` array to follow a polyline without lifting
@@ -693,6 +703,20 @@ runner:
   needed);
 - aligns the `.xctest` bundle id, re-signs inside out, and verifies that every
   embedded binary is signed before packaging.
+
+### Local regression checks
+
+With the Xcode Swift compiler available on macOS:
+
+```bash
+sh Scripts/test-continuous-drag.sh
+python3 Scripts/test-action-dispatch.py
+```
+
+These checks run without a phone, signing, network listeners or touch injection.
+The [dispatch regression harness](Tests/ActionDispatch/README.md) runs the actual
+dispatcher with device I/O replaced by test doubles; it also exercises pairing
+and envelope verification with in-memory token storage.
 
 ### Release builds
 
